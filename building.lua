@@ -17,51 +17,73 @@ local ghostoffset = Vector3.new(0,0,0)
 
 function Building:Place(model, cf, mousetarg)
 	if (isServer) and deb == true then
-		goffset = Vector3.new(0,0,0)
-		if mousetarg.Size.X == 1 then
-			goffset = Vector3.new(0.5,0,0)
+		if mousetarg then
+			local clone = model:Clone()
+			local relnorm = Vector3.new(0,0,0)
+			ghostoffset = Vector3.new(0,0,0)
+			if mousetarg.Size.X % 2 == 0 then
+				ghostoffset += Vector3.new(0.5*1,0,0)
+			end
+			if mousetarg.Size.Y % 2 == 0 then
+				ghostoffset += Vector3.new(0,0.5*1,0)
+			end
+			if mousetarg.Size.Z % 2 == 0 then
+				ghostoffset += Vector3.new(0,0,0.5*1)
+			end
+
+
+
+			local relcf = mousetarg.CFrame:ToObjectSpace(cf)
+			local relcflookv = relcf.LookVector
+
+			local max = math.max(math.abs(relcflookv.X),math.abs(relcflookv.Y),math.abs(relcflookv.Z))
+			local newrnd
+			print(max)
+			if math.abs(relcflookv.X) == max then
+				newrnd = Vector3.new(relcf.X,round(relcf.Y+ghostoffset.Y),round(relcf.Z+ghostoffset.Z))
+				ghostoffset = Vector3.new(0,ghostoffset.Y,ghostoffset.Z)
+				print('leaving x alone')
+			end
+			if math.abs(relcflookv.Y) == max then
+				newrnd = Vector3.new(round(relcf.X+ghostoffset.X),relcf.Y,round(relcf.Z+ghostoffset.Z))
+				ghostoffset = Vector3.new(ghostoffset.X,0,ghostoffset.Z)
+				print('leaving y alone')
+			end
+			if math.abs(relcflookv.Z) == max then
+				newrnd = Vector3.new(round(relcf.X+ghostoffset.X),round(relcf.Y+ghostoffset.Y),relcf.Z)
+				ghostoffset = Vector3.new(ghostoffset.X,ghostoffset.Y,0)
+				print('leaving z alone')
+			end
+
+			print(ghostoffset)
+			newrnd = newrnd-ghostoffset
+			local relrnd = CFrame.lookAt(newrnd,newrnd+relcf.LookVector,relcf.UpVector)
+
+
+			local relnew = mousetarg.CFrame:ToWorldSpace(relrnd)
+
+			local snaptween = tween:Create(workspace.snap,tweeninfo,{
+				CFrame = relnew
+			})
+			snaptween:Play()
+
+			clone.CFrame = relnew*CFrame.Angles(math.pi/2,0,0) + relnew.LookVector*model:GetAttribute("offset").Y + relnew.UpVector*model:GetAttribute("offset").Z + relnew.RightVector*model:GetAttribute("offset").X
+			clone.Parent = workspace
+			--print(model, mousetarg)
+			local weld = Instance.new("WeldConstraint")
+			weld.Parent = workspace
+			weld.Part0 = clone
+			weld.Part1 = mousetarg
+			weld.Enabled = true
+			local health = Instance.new("NumberValue")
+			health.Name = "health"
+			health.Value = 500 --change
+			health.Parent = clone
+			deb = false
+			wait(0.2)
+			deb = true
 		end
-		if mousetarg.Size.Y == 1 then
-			goffset = Vector3.new(0,0.5,0)
-		end
-		if mousetarg.Size.Z == 1 then
-			goffset = Vector3.new(0,0,0.5)
-		end
-		
-		local clone = model:Clone()
-
-		local relcf = mousetarg.CFrame:ToObjectSpace(cf)
-		
-		local newrnd = Vector3.new(round(relcf.X+goffset.X),round(relcf.Y+goffset.Y),round(relcf.Z+goffset.Z))
-		newrnd = newrnd-goffset
-		local relrnd = CFrame.lookAt(newrnd,newrnd+relcf.LookVector,relcf.UpVector)
-		
-
-		local relnew = mousetarg.CFrame:ToWorldSpace(relrnd)
-
-		local snaptween = tween:Create(workspace.snap,tweeninfo,{
-			CFrame = relnew
-		})
-		snaptween:Play()
-
-		clone.CFrame = relnew*CFrame.Angles(math.pi/2,0,0) + relnew.LookVector*model:GetAttribute("offset").Y + relnew.UpVector*model:GetAttribute("offset").Z
-		clone.Parent = workspace
-		Arrows:Draw(clone)
-		--print(model, mousetarg)
-		local weld = Instance.new("WeldConstraint")
-		weld.Parent = workspace
-		weld.Part0 = clone
-		weld.Part1 = mousetarg
-		weld.Enabled = true
-		local health = Instance.new("NumberValue")
-		health.Name = "health"
-		health.Value = 500 --change
-		health.Parent = clone
-		deb = false
-		wait(0.2)
-		deb = true
 	end
-
 	if (not isServer) then
 		invokePlacement:FireServer(model, cf, mousetarg)
 	end
@@ -77,40 +99,48 @@ function Building:Ghost(model, cf, mousetarg)
 		if mousetarg then
 			local relnorm = Vector3.new(0,0,0)
 			ghostoffset = Vector3.new(0,0,0)
-			if mousetarg.Size.X % 2 ~= 0 then
+			if mousetarg.Size.X % 2 == 0 then
 				ghostoffset += Vector3.new(0.5*1,0,0)
 			end
-			if mousetarg.Size.Y % 2 ~= 0 then
-				ghostoffset += Vector3.new(0,0.5,0)
+			if mousetarg.Size.Y % 2 == 0 then
+				ghostoffset += Vector3.new(0,0.5*1,0)
 			end
-			if mousetarg.Size.Z % 2 ~= 0 then
+			if mousetarg.Size.Z % 2 == 0 then
 				ghostoffset += Vector3.new(0,0,0.5*1)
 			end
-			
-			
-			
+
+
+
 			local relcf = mousetarg.CFrame:ToObjectSpace(cf)
 			local relcflookv = relcf.LookVector
-			
-			local max = math.max(relcflookv.X,relcflookv.Y,relcflookv.Z)
+
+			local max = math.max(math.abs(relcflookv.X),math.abs(relcflookv.Y),math.abs(relcflookv.Z))
 			local newrnd
-			if relcflookv.X == max then
-				relnorm = Vector3.new(0,1,1)
+			
+			if math.abs(relcflookv.X) == max then
+				newrnd = Vector3.new(relcf.X,round(relcf.Y+ghostoffset.Y),round(relcf.Z+ghostoffset.Z))
+				ghostoffset = Vector3.new(0,ghostoffset.Y,ghostoffset.Z)
+				
 			end
-			if relcflookv.Y == max then
-				relnorm = Vector3.new(1,0,1)
+			if math.abs(relcflookv.Y) == max then
+				newrnd = Vector3.new(round(relcf.X+ghostoffset.X),relcf.Y,round(relcf.Z+ghostoffset.Z))
+				ghostoffset = Vector3.new(ghostoffset.X,0,ghostoffset.Z)
+				
 			end
-			if relcflookv.Z == max then
-				relnorm = Vector3.new(1,1,0)
+			if math.abs(relcflookv.Z) == max then
+				newrnd = Vector3.new(round(relcf.X+ghostoffset.X),round(relcf.Y+ghostoffset.Y),relcf.Z)
+				ghostoffset = Vector3.new(ghostoffset.X,ghostoffset.Y,0)
+				
 			end
-			newrnd = Vector3.new(round(relcf.X+ghostoffset.X),round(relcf.Y+ghostoffset.Y),round(relcf.Z+ghostoffset.Z))
+
+			
 			newrnd = newrnd-ghostoffset
 			local relrnd = CFrame.lookAt(newrnd,newrnd+relcf.LookVector,relcf.UpVector)
 
 
 			local relnew = mousetarg.CFrame:ToWorldSpace(relrnd)
 			--clone.CFrame = cf
-			clone.CFrame = relnew*CFrame.Angles(math.pi/2,0,0) + relnew.LookVector*model:GetAttribute("offset").Y + relnew.UpVector*model:GetAttribute("offset").Z
+			clone.CFrame = relnew*CFrame.Angles(math.pi/2,0,0) + relnew.LookVector*model:GetAttribute("offset").Y + relnew.UpVector*model:GetAttribute("offset").Z + relnew.RightVector*model:GetAttribute("offset").X
 			clone.Parent = workspace.ghosts
 			clone.Transparency = 0.6
 			clone.Anchored = true
