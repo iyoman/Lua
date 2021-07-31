@@ -97,20 +97,20 @@ function calcsnap(mousetarg,norm,cf)
 	local relcf = mousetarg.CFrame:ToObjectSpace(cf)
 	local relcflookv = relcf.LookVector
 
-	local max = math.max(math.abs(relcflookv.X),math.abs(relcflookv.Y),math.abs(relcflookv.Z))
+	local max = math.max(math.abs(normrelative.X),math.abs(normrelative.Y),math.abs(normrelative.Z))
 	local newrnd = Vector3.new(round(relcf.X+ghostoffset.X),round(relcf.Y+ghostoffset.Y),round(relcf.Z+ghostoffset.Z))
 
-	if math.abs(relcflookv.X) >= 0.99 then
+	if math.abs(normrelative.X) >= 0.99 then
 		newrnd = Vector3.new(relcf.X,round(relcf.Y+ghostoffset.Y),round(relcf.Z+ghostoffset.Z))
 		ghostoffset = Vector3.new(0,ghostoffset.Y,ghostoffset.Z)
 
 	end
-	if math.abs(relcflookv.Y) >= 0.99 then
+	if math.abs(normrelative.Y) >= 0.99 then
 		newrnd = Vector3.new(round(relcf.X+ghostoffset.X),relcf.Y,round(relcf.Z+ghostoffset.Z))
 		ghostoffset = Vector3.new(ghostoffset.X,0,ghostoffset.Z)
 
 	end
-	if math.abs(relcflookv.Z) >= 0.99 then
+	if math.abs(normrelative.Z) >= 0.99 then
 		newrnd = Vector3.new(round(relcf.X+ghostoffset.X),round(relcf.Y+ghostoffset.Y),relcf.Z)
 		ghostoffset = Vector3.new(ghostoffset.X,ghostoffset.Y,0)
 
