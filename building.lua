@@ -15,12 +15,16 @@ local tweeninfo = TweenInfo.new()
 local goffset = Vector3.new(0,0,0)
 local ghostoffset = Vector3.new(0,0,0)
 
-function Building:Place(model, cf, mousetarg, norm)
+function Building:Place(model, cf, mousetarg, norm, snap)
 	if (isServer) and deb == true then
 		if mousetarg then
-			
-			
-			local relnew = calcsnap(mousetarg,norm,cf)
+			local relnew
+			if snap then
+				relnew = calcsnap(mousetarg,norm,cf)
+				--print(relnew)
+			else
+				relnew = cf
+			end
 
 			local snaptween = tween:Create(workspace.snap,tweeninfo,{
 				CFrame = relnew
@@ -29,6 +33,7 @@ function Building:Place(model, cf, mousetarg, norm)
 			
 			local clone = model:Clone()
 			clone.CFrame = relnew*CFrame.Angles(math.pi/2,0,0) + relnew.LookVector*model:GetAttribute("offset").Y + relnew.UpVector*model:GetAttribute("offset").Z + relnew.RightVector*model:GetAttribute("offset").X
+			
 			clone.Parent = workspace
 			--print(model, mousetarg)
 			local weld = Instance.new("WeldConstraint")
@@ -46,11 +51,11 @@ function Building:Place(model, cf, mousetarg, norm)
 		end
 	end
 	if (not isServer) then
-		invokePlacement:FireServer(model, cf, mousetarg, norm)
+		invokePlacement:FireServer(model, cf, mousetarg, norm, snap)
 	end
 end
 
-function Building:Ghost(model, cf, mousetarg, norm)
+function Building:Ghost(model, cf, mousetarg, norm, snap)
 	if (not isServer) then
 		local clone = model:Clone()
 		if cghost then
@@ -58,10 +63,15 @@ function Building:Ghost(model, cf, mousetarg, norm)
 		end
 		physicsService:SetPartCollisionGroup(clone, "ghosts")
 		if mousetarg then
-			
-			local relnew = calcsnap(mousetarg,norm,cf)
+			local relnew
+			if snap then
+				relnew = calcsnap(mousetarg,norm,cf)
+			else
+				relnew = cf
+			end
 			--clone.CFrame = cf
 			clone.CFrame = relnew*CFrame.Angles(math.pi/2,0,0) + relnew.LookVector*model:GetAttribute("offset").Y + relnew.UpVector*model:GetAttribute("offset").Z + relnew.RightVector*model:GetAttribute("offset").X
+			
 			clone.Parent = workspace.ghosts
 			clone.Transparency = 0.6
 			clone.Anchored = true
@@ -120,7 +130,9 @@ function calcsnap(mousetarg,norm,cf)
 	newrnd = newrnd-ghostoffset
 	local relrnd = CFrame.lookAt(newrnd,newrnd+relcf.LookVector,relcf.UpVector)
 
-
+	if isServer then
+		print(relrnd)
+	end
 	local relnew = mousetarg.CFrame:ToWorldSpace(relrnd)
 	return relnew
 end
